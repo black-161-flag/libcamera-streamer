@@ -7,8 +7,7 @@ Because the version delivered by apt is to old, please follow the instructions f
 ## usage
 streamer.py [-h] [--hflip HFLIP] [--vflip VFLIP] [--width WIDTH] [--height HEIGHT] [--address ADDRESS] [--port PORT]
 
-Simple video streamer.
-
+```
 optional arguments:
   -h, --help         show this help message and exit
   --hflip HFLIP      rotate hflip
@@ -17,3 +16,4 @@ optional arguments:
   --height HEIGHT    height of the video
   --address ADDRESS  bind address
   --port PORT        bind port
+```
