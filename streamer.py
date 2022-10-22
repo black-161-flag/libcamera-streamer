@@ -126,6 +126,8 @@ def main():
     parser.add_argument('--vflip', type=int, default=None, help='rotate vflip')
     parser.add_argument('--width', type=int, default=None, help='width of the video')
     parser.add_argument('--height', type=int, default=None, help='height of the video')
+    parser.add_argument('--address', default='localhost', help='bind address')
+    parser.add_argument('--port', type=int, default=8000, help='bind port')
     args = parser.parse_args()
 
     buffer = StreamingBuffer()
@@ -134,7 +136,7 @@ def main():
                       hflip=args.hflip, vflip=args.vflip)
 
     try:
-        address = ('', 8000)
+        address = (args.address, args.port)
         server = StreamingServer(address, StreamingHandler(buffer))
         server.serve_forever()
     finally:
