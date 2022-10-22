@@ -122,12 +122,12 @@ class RaspiCamera:
 
 def main():
     parser = ArgumentParser(description='Simple video streamer.')
-    parser.add_argument('--hflip', type=int, default=None, help='rotate hflip')
-    parser.add_argument('--vflip', type=int, default=None, help='rotate vflip')
-    parser.add_argument('--width', type=int, default=None, help='width of the video')
-    parser.add_argument('--height', type=int, default=None, help='height of the video')
-    parser.add_argument('--address', default='localhost', help='bind address')
-    parser.add_argument('--port', type=int, default=8000, help='bind port')
+    parser.add_argument('--hflip', type=int, default=None, help='rotate hflip (default: 0)')
+    parser.add_argument('--vflip', type=int, default=None, help='rotate vflip (default: 0)')
+    parser.add_argument('--width', type=int, default=None, help='width of the video (default: 1280)')
+    parser.add_argument('--height', type=int, default=None, help='height of the video (default: 720)')
+    parser.add_argument('--address', default='localhost', help='bind address (default: localhost)')
+    parser.add_argument('--port', type=int, default=8000, help='bind port (default: 8000)')
     args = parser.parse_args()
 
     buffer = StreamingBuffer()
