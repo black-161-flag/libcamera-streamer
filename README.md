@@ -10,10 +10,10 @@ python3 streamer.py
 ```
 optional arguments:
   -h, --help         show this help message and exit
-  --hflip HFLIP      rotate hflip
-  --vflip VFLIP      rotate vflip
-  --width WIDTH      width of the video
-  --height HEIGHT    height of the video
-  --address ADDRESS  bind address
-  --port PORT        bind port
+  --hflip HFLIP      rotate hflip (default: 0)
+  --vflip VFLIP      rotate vflip (default: 0)
+  --width WIDTH      width of the video (default: 1280)
+  --height HEIGHT    height of the video (default: 720)
+  --address ADDRESS  bind address (default: localhost)
+  --port PORT        bind port (default: 8000)
 ```
