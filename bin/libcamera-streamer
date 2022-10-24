@@ -7,13 +7,15 @@ import logging
 import socketserver
 from argparse import ArgumentParser
 from http import server
-from threading import Condition
+from threading import Condition, Thread
 
 from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
 from libcamera import Transform
 
+import cv2
+from simplejpeg import encode_jpeg
 
 class StreamingBuffer(io.BufferedIOBase):
     def __init__(self):
@@ -121,6 +123,66 @@ class RaspiCamera:
         return self.cam
 
 
+class USBCamera:
+    height = 1280
+    width = 720
+    hflip = 0
+    vflip = 0
+    buffer = None
+    cam = None
+    cam_id = None
+    capture_thread = None
+
+    def __init__(self, buffer=None, cam_id=None, height=None, width=None, hflip=None, vflip=None):
+        if buffer is not None:
+            self.buffer = buffer
+        if height is not None:
+            self.height = height
+        if width is not None:
+            self.width = width
+        if hflip is not None:
+            self.hflip = hflip
+        if vflip is not None:
+            self.vflip = vflip
+        if cam_id is not None:
+            self.cam_id = cam_id
+        print(cam_id)
+        self.stop = False
+        self.__setup_cam__()
+        self.start()
+
+    def __setup_cam__(self):
+        self.cam = cv2.VideoCapture(self.cam_id)
+        if not (self.cam.isOpened()):
+            print("Could not open video device")
+
+        #Set the resolution
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+
+    def __start__(self):
+        while True:
+            # Capture the video frame
+            # by frame
+            success, frame = self.cam.read()
+            # if frame is read correctly ret is True
+            if not success:
+                continue
+            with self.buffer.condition:
+                frame_jpeg = encode_jpeg(frame, quality=80, colorspace='BGR', colorsubsampling='420')
+                self.buffer.frame = frame_jpeg
+                self.buffer.condition.notify_all()
+        self.cam.release()
+
+    def start(self):
+        self.capture_thread = Thread(target=self.__start__, daemon=True)
+        self.capture_thread.start()
+
+    def stop(self):
+        self.capture_thread.do_run = False
+        self.capture_thread.join()
+
+
 def main():
     parser = ArgumentParser(description='Simple video streamer.')
     parser.add_argument('--hflip', type=int, default=None, help='rotate hflip (default: 0)')
@@ -133,13 +195,21 @@ def main():
                         help='bind address (default: localhost)')
     parser.add_argument('--port', type=int, default=8000,
                         help='bind port (default: 8000)')
+    parser.add_argument('--device', default=RaspiCamera,
+                        help='video device')
     args = parser.parse_args()
 
     buffer = StreamingBuffer()
-    cam = RaspiCamera(buffer=buffer,
-                      height=args.height, width=args.width,
-                      hflip=args.hflip, vflip=args.vflip)
 
+    if args.device == 'RaspiCamera':
+        cam = RaspiCamera(buffer=buffer,
+                          height=args.height, width=args.width,
+                          hflip=args.hflip, vflip=args.vflip)
+    elif args.device[:10] == '/dev/video':
+        video_device_id = int(args.device[10:])
+        cam = USBCamera(buffer=buffer, cam_id=video_device_id,
+                        height=args.height, width=args.width,
+                        hflip=args.hflip, vflip=args.vflip)
     try:
         address = (args.address, args.port)
         server = StreamingServer(address, StreamingHandler(buffer))
